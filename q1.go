@@ -18,50 +18,35 @@ import (
 // are removed, e.g. "don't" becomes "dont".
 // You should use `checkError` to handle potential errors.
 func topWords(pathString string, numWords int, charThreshold int) []WordCount {
-	contents, _ := ioutil.ReadFile(pathString)
-	loweredText := strings.ToLower(string(contents))
-
+	text, _ := ioutil.ReadFile(pathString)
+	text_str := string(text)
+	text_lower := strings.ToLower(text_str)
 	var punctuation = regexp.MustCompile(`[[:punct:]]`)
-	filteredText := punctuation.ReplaceAllString(loweredText, "")
-	wordList := strings.Fields(filteredText)
+	text_del_punct := punctuation.ReplaceAllString(text_lower, "")
+	text_arr := strings.Fields(text_del_punct)
 
-	counts := make([]WordCount, 0)
-	//counts = append(counts, WordCount{"gay", 1})
-	for _, word := range wordList {
-		//counts = append(counts, WordCount{word, 1})
+	counts := make(map[string]int)
+	for _, word := range text_arr {
 		if len(word) >= charThreshold {
-			counts = append(counts, WordCount{word, 1})
-
-			gotIt := 0
-			notGotIt :=0
-			for _, draw := range wordList {
-				//counts[i].Word = word
-
-				//fmt.Println("Draw is: ", draw)
-
-				if draw == word {
-						//counts[i].Count += 1
-					gotIt += 1
-				} else {
-						//counts[i].Count = 1
-					notGotIt += 1
-				}
-				//TODO: отслеживание работает, осталось насадить сову на глобус. Перед продолжением желательно запустить скрипт.
-				//ok := counts[i].Word
-				//if ok == word {
-				//	counts[i].Count += 1
-				//} else {
-				//	counts[i].Count = 1
-				//}
+			_, ok := counts[word]
+			if ok {
+				counts[word] += 1
+			} else {
+				counts[word] = 1
 			}
-					fmt.Println(gotIt, notGotIt)
 		}
+
 	}
-	fmt.Println("Wordlist: ", wordList,"\nCounts: " , counts)
-	return nil
+	structedCount := make([]WordCount, 0)
+	for key, value := range counts {
+		structedCount = append(structedCount, WordCount{key, value})
+	}
+	sortWordCounts(structedCount)
+
+	return structedCount[:numWords]
 }
 
-// A struct that represents how many times a word is observed in a document
+//WordCount is a struct that represents how many times a word is observed in a document
 type WordCount struct {
 	Word  string
 	Count int
@@ -70,6 +55,7 @@ type WordCount struct {
 func (wc WordCount) String() string {
 	return fmt.Sprintf("%v: %v", wc.Word, wc.Count)
 }
+
 // Helper function to sort a list of word counts in place.
 // This sorts by the count in decreasing order, breaking ties using the word.
 // DO NOT MODIFY THIS FUNCTION!
